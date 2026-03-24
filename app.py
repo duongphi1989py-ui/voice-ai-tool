@@ -15,7 +15,7 @@ voices = {
     "Nữ US": "en-US-JennyNeural",
     "Nam US": "en-US-GuyNeural"
 }
-)
+
 
 rate = st.selectbox(
     "Tốc độ:",
