@@ -5,7 +5,7 @@ st.set_page_config(page_title="Voice AI Pro", page_icon="🎤")
 
 st.title("🎤 Voice AI Pro")
 
-api_key = st.text_input("Nhập API Key:", type="password")
+api_key = st.secrets["ELEVEN_API_KEY"]
 text = st.text_area("Nhập văn bản:", height=200)
 
 voice_id = st.selectbox("Chọn giọng:", ["Rachel", "Adam"])
