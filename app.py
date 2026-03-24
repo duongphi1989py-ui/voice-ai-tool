@@ -101,11 +101,7 @@ if st.button("🚀 Generate Voice", key="generate_btn"):
 
         st.success("✅ Done!")
 
-      audio_file = open("voice.mp3", "rb")
-audio_bytes = audio_file.read()
-st.audio(audio_bytes, format="audio/mp3")
-audio_file.close()
-
+    st.audio("voice.mp3")
         with open("voice.mp3", "rb") as f:
             st.download_button(
                 "📥 Download MP3",
