@@ -9,14 +9,12 @@ st.title("🎤 Voice AI Pro Max (Giọng xịn hơn)")
 
 text = st.text_area("Nhập văn bản:", height=200)
 
-voice = st.selectbox(
-    "Chọn giọng:",
-    [
-        "vi-VN-HoaiMyNeural (Nữ - Việt Nam)",
-        "vi-VN-NamMinhNeural (Nam - Việt Nam)",
-        "en-US-JennyNeural (Nữ - US)",
-        "en-US-GuyNeural (Nam - US)"
-    ]
+voices = {
+    "Nữ Việt Nam": "vi-VN-HoaiMyNeural",
+    "Nam Việt Nam": "vi-VN-NamMinhNeural",
+    "Nữ US": "en-US-JennyNeural",
+    "Nam US": "en-US-GuyNeural"
+}
 )
 
 rate = st.selectbox(
@@ -26,7 +24,11 @@ rate = st.selectbox(
 
 # async function
 async def make_voice(text, voice, rate):
-    communicate = edge_tts.Communicate(text, voice, rate=rate)
+    communicate = edge_tts.Communicate(
+    text=text,
+    voice=voices[voice],
+    rate=rate
+)
     await communicate.save("voice.mp3")
 
 if st.button("🚀 Tạo giọng nói"):
