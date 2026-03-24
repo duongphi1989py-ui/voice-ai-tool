@@ -26,7 +26,10 @@ rate = st.selectbox(
 async def make_voice(text, voice, rate):
     communicate = edge_tts.Communicate(
     text=text,
-    voice=voices[voice],
+    voice = st.selectbox(
+    "Chọn giọng:",
+    list(voices.keys())
+)
     rate=rate
 )
     await communicate.save("voice.mp3")
