@@ -2,3 +2,5 @@ streamlit
 edge-tts
 streamlit
 gtts
+streamlit
+elevenlabs
