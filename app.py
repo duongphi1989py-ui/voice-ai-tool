@@ -10,7 +10,7 @@ st.title("🎬 Voice Storytelling PRO MAX")
 st.write("Text → Voice kể chuyện kiểu TikTok / YouTube")
 
 # ================= TEXT =================
-text = st.text_area("Nhập nội dung truyện:", height=250)
+text = st.text_area("Nhập nội dung truyện:", height=99250)
 
 # ================= VOICES =================
 voices = {
@@ -20,13 +20,17 @@ voices = {
     "Nam US (Deep)": "en-US-GuyNeural"
 }
 
-voice_name = st.selectbox("Chọn giọng:", list(voices.keys()))
+rate_name = st.selectbox("Tốc độ:", list(rate_map.keys()))
 
 # ================= STORY MODE =================
 story_mode = st.toggle("🎭 Story Mode (tự nhiên như người kể chuyện)", value=True)
 
 # ================= SPEED =================
-rate = st.selectbox("Tốc độ:", ["-10%", "0%", "+10%"])
+rate_map = {
+    "Chậm": "-10%",
+    "Bình thường": "+0%",
+    "Nhanh": "+10%"
+}
 
 # ================= PRO PAUSE ENGINE =================
 def story_pause_engine(text):
