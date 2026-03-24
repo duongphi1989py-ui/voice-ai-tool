@@ -1,37 +1,46 @@
 import streamlit as st
-from gtts import gTTS
+import asyncio
+import edge_tts
 import os
 
-st.set_page_config(page_title="Voice AI Stable", page_icon="🎤")
+st.set_page_config(page_title="Voice AI Pro Max", page_icon="🎤")
 
-st.title("🎤 Voice AI Stable Tool")
-st.write("Text → Voice (chạy ổn định 100%)")
+st.title("🎤 Voice AI Pro Max (Giọng xịn hơn)")
 
 text = st.text_area("Nhập văn bản:", height=200)
 
-lang = st.selectbox(
-    "Chọn ngôn ngữ:",
-    ["Tiếng Việt", "English"]
+voice = st.selectbox(
+    "Chọn giọng:",
+    [
+        "vi-VN-HoaiMyNeural (Nữ - Việt Nam)",
+        "vi-VN-NamMinhNeural (Nam - Việt Nam)",
+        "en-US-JennyNeural (Nữ - US)",
+        "en-US-GuyNeural (Nam - US)"
+    ]
 )
 
-lang_map = {
-    "Tiếng Việt": "vi",
-    "English": "en"
-}
+rate = st.selectbox(
+    "Tốc độ:",
+    ["-10%", "0%", "+10%"]
+)
+
+# async function
+async def make_voice(text, voice, rate):
+    communicate = edge_tts.Communicate(text, voice, rate=rate)
+    await communicate.save("voice.mp3")
 
 if st.button("🚀 Tạo giọng nói"):
 
     if not text:
-        st.warning("Vui lòng nhập nội dung!")
+        st.warning("Nhập nội dung trước!")
     else:
-        tts = gTTS(text=text, lang=lang_map[lang])
+        with st.spinner("Đang tạo giọng AI..."):
 
-        file_path = "voice.mp3"
-        tts.save(file_path)
+            asyncio.run(make_voice(text, voice, rate))
 
-        st.success("✅ Tạo thành công!")
+        st.success("✅ Xong!")
 
-        st.audio(file_path)
+        st.audio("voice.mp3")
 
-        with open(file_path, "rb") as f:
+        with open("voice.mp3", "rb") as f:
             st.download_button("📥 Tải file MP3", f, file_name="voice.mp3")
