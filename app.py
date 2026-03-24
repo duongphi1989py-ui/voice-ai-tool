@@ -4,43 +4,44 @@ import edge_tts
 import re
 import random
 
-st.set_page_config(page_title="Voice Storytelling Pro Max", page_icon="🎬")
+st.set_page_config(page_title="Voice Story AI Pro", page_icon="🎬")
 
-st.title("🎬 Voice Storytelling PRO MAX")
-st.write("Text → Voice kể chuyện kiểu TikTok / YouTube")
+st.title("🎬 Voice Story AI Pro Max")
+st.write("Text → Voice kể chuyện + ngắt nghỉ tự động")
 
-# ================= TEXT =================
-text = st.text_area("Nhập nội dung truyện:", height=99250)
+# ================= INPUT =================
+text = st.text_area("Nhập nội dung:", height=250)
 
 # ================= VOICES =================
 voices = {
     "Nữ Việt Nam": "vi-VN-HoaiMyNeural",
     "Nam Việt Nam": "vi-VN-NamMinhNeural",
-    "Nữ US (Story)": "en-US-JennyNeural",
-    "Nam US (Deep)": "en-US-GuyNeural"
+    "Nữ US": "en-US-JennyNeural",
+    "Nam US": "en-US-GuyNeural"
 }
 
-rate_name = st.selectbox("Tốc độ:", list(rate_map.keys()))
+voice_name = st.selectbox("Chọn giọng:", list(voices.keys()))
 
-# ================= STORY MODE =================
-story_mode = st.toggle("🎭 Story Mode (tự nhiên như người kể chuyện)", value=True)
-
-# ================= SPEED =================
+# ================= RATE (FIX CHUẨN EDGE-TTS) =================
 rate_map = {
     "Chậm": "-10%",
     "Bình thường": "+0%",
     "Nhanh": "+10%"
 }
 
-# ================= PRO PAUSE ENGINE =================
-def story_pause_engine(text):
-    # làm sạch cơ bản
+rate_name = st.selectbox("Tốc độ:", list(rate_map.keys()))
+
+# ================= STORY MODE =================
+story_mode = st.toggle("🎭 Story Mode (ngắt nghỉ tự nhiên)", value=True)
+
+# ================= AUTO PAUSE ENGINE =================
+def story_engine(text):
     text = text.strip()
 
-    # xuống dòng = pause dài
+    # xuống dòng = nghỉ
     text = text.replace("\n", " ... ")
 
-    # dấu câu = ngắt nghỉ
+    # dấu câu = pause
     text = re.sub(r"\.", ". ... ", text)
     text = re.sub(r",", ", ... ", text)
     text = re.sub(r"!", "! ... ", text)
@@ -49,21 +50,19 @@ def story_pause_engine(text):
     # tăng cảm giác kể chuyện
     text = text.replace("...", " ...... ")
 
-    # thêm random nhẹ để giống người thật
-    words = text.split(" ")
-    result = []
-
-    for w in words:
-        result.append(w)
-
-        if story_mode:
-            # random pause nhỏ để tự nhiên hơn
+    # random pause nhẹ (giống người thật)
+    if story_mode:
+        words = text.split()
+        new_text = []
+        for w in words:
+            new_text.append(w)
             if random.random() < 0.03:
-                result.append(" ... ")
+                new_text.append(" ... ")
+        return " ".join(new_text)
 
-    return " ".join(result)
+    return text
 
-# ================= AUDIO ENGINE =================
+# ================= GENERATE VOICE =================
 async def generate_voice(text, voice, rate):
     communicate = edge_tts.Communicate(
         text=text,
@@ -73,21 +72,29 @@ async def generate_voice(text, voice, rate):
     await communicate.save("voice.mp3")
 
 # ================= RUN =================
-if st.button("🚀 Generate Story Voice"):
+if st.button("🚀 Tạo giọng nói"):
 
     if not text:
-        st.warning("Nhập nội dung trước đã!")
+        st.warning("⚠️ Nhập nội dung trước!")
     else:
 
-        final_text = story_pause_engine(text) if story_mode else text
+        final_text = story_engine(text)
 
-        with st.spinner("🎧 Đang tạo giọng kể chuyện..."):
+        with st.spinner("🎧 Đang tạo giọng AI..."):
             asyncio.run(
-                generate_voice(final_text, voices[voice_name], rate)
+                generate_voice(
+                    final_text,
+                    voices[voice_name],
+                    rate_map[rate_name]
+                )
             )
 
-        st.success("✅ Done!")
+        st.success("✅ Xong!")
 
+        st.audio("voice.mp3")
+
+        with open("voice.mp3", "rb") as f:
+            st.download_button("📥 Tải MP3", f, file_name="story.mp3")
         st.audio("voice.mp3")
 
         with open("voice.mp3", "rb") as f:
