@@ -7,8 +7,8 @@ import uuid
 
 st.set_page_config(page_title="Voice AI SaaS Pro", page_icon="🎙️")
 
-st.title("🎙️ Voice AI SaaS PRO")
-st.write("Text → Voice AI + Emotion + Story Mode")
+st.title("🎙️ Voice AI SaaS PRO (Smooth Version)")
+st.write("Text → Voice AI mượt như người thật")
 
 # ================= TEXT =================
 text = st.text_area("Nhập nội dung:", height=250)
@@ -22,14 +22,6 @@ voices = {
 }
 voice_name = st.selectbox("Chọn giọng:", list(voices.keys()))
 
-# ================= RATE =================
-rate_map = {
-    "Chậm": "-10%",
-    "Bình thường": "+0%",
-    "Nhanh": "+10%"
-}
-rate_name = st.selectbox("Tốc độ:", list(rate_map.keys()))
-
 # ================= EMOTION =================
 emotion_map = {
     "Tự nhiên": {"rate": "+0%", "pitch": "+0Hz"},
@@ -40,33 +32,24 @@ emotion_map = {
 }
 emotion_name = st.selectbox("🎭 Emotion", list(emotion_map.keys()))
 
-# ================= STORY MODE =================
-story_mode = st.toggle("🎭 Story Mode", value=True)
-
 # ================= PAUSE =================
 st.subheader("⏱️ Ngắt nghỉ")
 
-pause_dot = st.slider("Dấu chấm (.)", 0.0, 0.5, 0.2, 0.1)
-pause_comma = st.slider("Dấu phẩy (,)", 0.0, 0.5, 0.1, 0.1)
-pause_exclaim = st.slider("Dấu !", 0.0, 0.5, 0.3, 0.1)
+pause_dot = st.slider("Dấu chấm (.)", 0.0, 0.8, 0.3, 0.1)
+pause_comma = st.slider("Dấu phẩy (,)", 0.0, 0.5, 0.2, 0.1)
+pause_exclaim = st.slider("Dấu !", 0.0, 0.8, 0.4, 0.1)
 
-# ================= TEXT ENGINE =================
+# ================= TEXT ENGINE (SSML) =================
 def story_engine(text, cfg):
     text = text.strip()
-    text = text.replace("\n", " ... ")
 
-    text = re.sub(r"\.", ". ... " * int(cfg["dot"] * 5 + 1), text)
-    text = re.sub(r",", ", ... " * int(cfg["comma"] * 5 + 1), text)
-    text = re.sub(r"!", "! ... " * int(cfg["exclaim"] * 5 + 1), text)
+    # xuống dòng
+    text = text.replace("\n", '<break time="500ms"/>')
 
-    if story_mode:
-        words = text.split()
-        out = []
-        for w in words:
-            out.append(w)
-            if random.random() < 0.02:
-                out.append(" ... ")
-        return " ".join(out)
+    # dấu câu
+    text = re.sub(r"\.", f'.<break time="{int(cfg["dot"]*1000)}ms"/>', text)
+    text = re.sub(r",", f',<break time="{int(cfg["comma"]*1000)}ms"/>', text)
+    text = re.sub(r"!", f'!<break time="{int(cfg["exclaim"]*1000)}ms"/>', text)
 
     return text
 
@@ -77,8 +60,8 @@ cfg = {
 }
 
 # ================= SPLIT TEXT =================
-def split_text(text, max_length=300):
-    sentences = re.split(r'(?<=[.!?]) +', text)
+def split_text(text, max_length=400):
+    sentences = re.split(r'(?<=[.!?])\s+', text)
     chunks = []
     current = ""
 
@@ -98,23 +81,32 @@ def split_text(text, max_length=300):
 async def generate_long_voice(text, voice, rate, pitch, file_name):
     chunks = split_text(text)
 
-    # reset file
     open(file_name, "wb").close()
 
     for i, chunk in enumerate(chunks):
+
+        ssml = f"""
+        <speak>
+            <prosody rate="{rate}" pitch="{pitch}">
+                {chunk}
+            </prosody>
+        </speak>
+        """
+
         temp_file = f"temp_{i}.mp3"
 
         communicate = edge_tts.Communicate(
-            text=chunk,
-            voice=voice,
-            rate=rate,
-            pitch=pitch
+            text=ssml,
+            voice=voice
         )
         await communicate.save(temp_file)
 
+        # nối file mượt hơn
         with open(file_name, "ab") as final:
             with open(temp_file, "rb") as f:
                 final.write(f.read())
+
+        await asyncio.sleep(0.05)  # chống click
 
 # ================= CACHE =================
 @st.cache_data
