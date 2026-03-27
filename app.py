@@ -7,8 +7,8 @@ import uuid
 
 st.set_page_config(page_title="Voice AI SaaS Pro", page_icon="🎙️")
 
-st.title("🎙️ Voice AI SaaS PRO (Stable + Story Engine)")
-st.write("Text → Voice AI + chỉnh ngắt nghỉ siêu mượt")
+st.title("🎙️ Voice AI SaaS PRO")
+st.write("Text → Voice AI + Emotion + Story Mode")
 
 # ================= TEXT =================
 text = st.text_area("Nhập nội dung:", height=250)
@@ -20,7 +20,6 @@ voices = {
     "Nữ US": "en-US-JennyNeural",
     "Nam US": "en-US-GuyNeural"
 }
-
 voice_name = st.selectbox("Chọn giọng:", list(voices.keys()))
 
 # ================= RATE =================
@@ -29,11 +28,7 @@ rate_map = {
     "Bình thường": "+0%",
     "Nhanh": "+10%"
 }
-
 rate_name = st.selectbox("Tốc độ:", list(rate_map.keys()))
-
-# ================= STORY MODE =================
-story_mode = st.toggle("🎭 Story Mode (tự nhiên hơn)", value=True)
 
 # ================= EMOTION =================
 emotion_map = {
@@ -43,15 +38,17 @@ emotion_map = {
     "Kể chuyện": {"rate": "-5%", "pitch": "+0Hz"},
     "Quảng cáo": {"rate": "+20%", "pitch": "+10Hz"}
 }
-
 emotion_name = st.selectbox("🎭 Emotion", list(emotion_map.keys()))
-# ================= PAUSE CONTROL =================
-st.subheader("⏱️ Ngắt nghỉ tùy chỉnh")
+
+# ================= STORY MODE =================
+story_mode = st.toggle("🎭 Story Mode", value=True)
+
+# ================= PAUSE =================
+st.subheader("⏱️ Ngắt nghỉ")
 
 pause_dot = st.slider("Dấu chấm (.)", 0.0, 0.5, 0.2, 0.1)
 pause_comma = st.slider("Dấu phẩy (,)", 0.0, 0.5, 0.1, 0.1)
 pause_exclaim = st.slider("Dấu !", 0.0, 0.5, 0.3, 0.1)
-pause_newline = st.slider("Xuống dòng", 0.0, 0.5, 0.4, 0.1)
 
 # ================= TEXT ENGINE =================
 def story_engine(text, cfg):
@@ -72,6 +69,14 @@ def story_engine(text, cfg):
         return " ".join(out)
 
     return text
+
+cfg = {
+    "dot": pause_dot,
+    "comma": pause_comma,
+    "exclaim": pause_exclaim
+}
+
+# ================= SPLIT TEXT =================
 def split_text(text, max_length=300):
     sentences = re.split(r'(?<=[.!?]) +', text)
     chunks = []
@@ -88,22 +93,41 @@ def split_text(text, max_length=300):
         chunks.append(current.strip())
 
     return chunks
-# ================= CONFIG =================
-cfg = {
-    "dot": pause_dot,
-    "comma": pause_comma,
-    "exclaim": pause_exclaim,
-    "newline": pause_newline
-}
 
-# ================= AUDIO =================
-async def generate_voice(text, voice, rate, file_name):
-    communicate = edge_tts.Communicate(
-        text=text,
-        voice=voice,
-        rate=rate
+# ================= GENERATE =================
+async def generate_long_voice(text, voice, rate, pitch, file_name):
+    chunks = split_text(text)
+
+    # reset file
+    open(file_name, "wb").close()
+
+    for i, chunk in enumerate(chunks):
+        temp_file = f"temp_{i}.mp3"
+
+        communicate = edge_tts.Communicate(
+            text=chunk,
+            voice=voice,
+            rate=rate,
+            pitch=pitch
+        )
+        await communicate.save(temp_file)
+
+        with open(file_name, "ab") as final:
+            with open(temp_file, "rb") as f:
+                final.write(f.read())
+
+# ================= CACHE =================
+@st.cache_data
+def cached_generate(text, voice, rate, pitch):
+    file_name = f"cache_{hash(text + voice + rate + pitch)}.mp3"
+
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
+    loop.run_until_complete(
+        generate_long_voice(text, voice, rate, pitch, file_name)
     )
-    await communicate.save(file_name)
+
+    return file_name
 
 # ================= RUN =================
 if st.button("🚀 Generate Voice"):
@@ -111,27 +135,22 @@ if st.button("🚀 Generate Voice"):
     if not text:
         st.warning("Nhập nội dung trước!")
     else:
+        emotion = emotion_map[emotion_name]
+
         final_text = story_engine(text, cfg)
-        file_name = f"voice_{uuid.uuid4()}.mp3"
 
         with st.spinner("🎧 Đang tạo voice..."):
-            loop = asyncio.new_event_loop()
-            asyncio.set_event_loop(loop)
-          emotion = emotion_map[emotion_name]
-generate_voice(
-    final_text,
-    voices[voice_name],
-    emotion["rate"],
-    emotion["pitch"],
-    file_name
-)
+            file_name = cached_generate(
+                final_text,
+                voices[voice_name],
+                emotion["rate"],
+                emotion["pitch"]
+            )
 
         st.success("✅ Done!")
 
-        # Play audio
         st.audio(file_name)
 
-        # Download
         with open(file_name, "rb") as f:
             st.download_button(
                 "📥 Tải MP3",
