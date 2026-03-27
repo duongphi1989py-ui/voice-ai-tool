@@ -35,6 +35,16 @@ rate_name = st.selectbox("Tốc độ:", list(rate_map.keys()))
 # ================= STORY MODE =================
 story_mode = st.toggle("🎭 Story Mode (tự nhiên hơn)", value=True)
 
+# ================= EMOTION =================
+emotion_map = {
+    "Tự nhiên": {"rate": "+0%", "pitch": "+0Hz"},
+    "Vui vẻ": {"rate": "+15%", "pitch": "+20Hz"},
+    "Buồn": {"rate": "-15%", "pitch": "-20Hz"},
+    "Kể chuyện": {"rate": "-5%", "pitch": "+0Hz"},
+    "Quảng cáo": {"rate": "+20%", "pitch": "+10Hz"}
+}
+
+emotion_name = st.selectbox("🎭 Emotion", list(emotion_map.keys()))
 # ================= PAUSE CONTROL =================
 st.subheader("⏱️ Ngắt nghỉ tùy chỉnh")
 
@@ -108,12 +118,15 @@ if st.button("🚀 Generate Voice"):
             loop = asyncio.new_event_loop()
             asyncio.set_event_loop(loop)
             loop.run_until_complete(
-                generate_voice(
-                    final_text,
-                    voices[voice_name],
-                    rate_map[rate_name],
-                    file_name
-                )
+                emotion = emotion_map[emotion_name]
+
+generate_voice(
+    final_text,
+    voices[voice_name],
+    emotion["rate"],
+    emotion["pitch"],
+    file_name
+)
             )
 
         st.success("✅ Done!")
