@@ -21,7 +21,7 @@ voices = {
     "Nam US": "en-US-GuyNeural"
 }
 
-voice_name = st.selectbox("Chọn giọng:", list(voices.keys()), key="voice_select")
+voice_name = st.selectbox("Chọn giọng:", list(voices.keys()))
 
 # ================= RATE =================
 rate_map = {
@@ -30,12 +30,12 @@ rate_map = {
     "Nhanh": "+10%"
 }
 
-rate_name = st.selectbox("Tốc độ:", list(rate_map.keys()), key="rate_select")
+rate_name = st.selectbox("Tốc độ:", list(rate_map.keys()))
 
 # ================= STORY MODE =================
-story_mode = st.toggle("🎭 Story Mode (tự nhiên hơn)", value=True, key="story_mode")
+story_mode = st.toggle("🎭 Story Mode (tự nhiên hơn)", value=True)
 
-# ================= PAUSE CONTROL (0.1 → 0.5) =================
+# ================= PAUSE CONTROL =================
 st.subheader("⏱️ Ngắt nghỉ tùy chỉnh")
 
 pause_dot = st.slider("Dấu chấm (.)", 0.0, 0.5, 0.2, 0.1)
@@ -46,7 +46,6 @@ pause_newline = st.slider("Xuống dòng", 0.0, 0.5, 0.4, 0.1)
 # ================= TEXT ENGINE =================
 def story_engine(text, cfg):
     text = text.strip()
-
     text = text.replace("\n", " ... ")
 
     text = re.sub(r"\.", ". ... " * int(cfg["dot"] * 5 + 1), text)
@@ -73,43 +72,44 @@ cfg = {
 }
 
 # ================= AUDIO =================
-async def generate_voice(text, voice, rate):
+async def generate_voice(text, voice, rate, file_name):
     communicate = edge_tts.Communicate(
         text=text,
         voice=voice,
         rate=rate
     )
-    await communicate.save("voice.mp3")
+    await communicate.save(file_name)
 
 # ================= RUN =================
-if st.button("🚀 Generate Voice", key="generate_btn"):
+if st.button("🚀 Generate Voice"):
 
     if not text:
         st.warning("Nhập nội dung trước!")
     else:
-
         final_text = story_engine(text, cfg)
+        file_name = f"voice_{uuid.uuid4()}.mp3"
 
         with st.spinner("🎧 Đang tạo voice..."):
-            asyncio.run(
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
+            loop.run_until_complete(
                 generate_voice(
                     final_text,
                     voices[voice_name],
-                    rate_map[rate_name]
+                    rate_map[rate_name],
+                    file_name
                 )
             )
 
         st.success("✅ Done!")
 
-    st.audio("voice.mp3")
-        with open("voice.mp3", "rb") as f:
-            st.download_button(
-                "📥 Download MP3",
-                f,
-                file_name="voice.mp3",
-                key=f"download_{uuid.uuid4()}"
-            )
-        st.audio("voice.mp3")
+        # Play audio
+        st.audio(file_name)
 
-        with open("voice.mp3", "rb") as f:
-            st.download_button("📥 Tải MP3", f, file_name="story.mp3")
+        # Download
+        with open(file_name, "rb") as f:
+            st.download_button(
+                "📥 Tải MP3",
+                f,
+                file_name="voice.mp3"
+            )
