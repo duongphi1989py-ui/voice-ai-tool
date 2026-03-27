@@ -117,8 +117,7 @@ if st.button("🚀 Generate Voice"):
         with st.spinner("🎧 Đang tạo voice..."):
             loop = asyncio.new_event_loop()
             asyncio.set_event_loop(loop)
-            loop.run_until_complete(
-emotion = emotion_map[emotion_name]
+          emotion = emotion_map[emotion_name]
 
 generate_voice(
     final_text,
@@ -127,7 +126,6 @@ generate_voice(
     emotion["pitch"],
     file_name
 )
-            )
 
         st.success("✅ Done!")
 
