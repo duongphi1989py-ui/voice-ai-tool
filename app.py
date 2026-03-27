@@ -118,7 +118,6 @@ if st.button("🚀 Generate Voice"):
             loop = asyncio.new_event_loop()
             asyncio.set_event_loop(loop)
           emotion = emotion_map[emotion_name]
-
 generate_voice(
     final_text,
     voices[voice_name],
