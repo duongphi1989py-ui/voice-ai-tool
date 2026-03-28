@@ -43,18 +43,7 @@ pause_exclaim = st.slider("Dấu !", 0.0, 0.8, 0.4, 0.1)
 def story_engine(text, cfg):
     text = text.strip()
 
-    # escape ký tự nguy hiểm trong XML
-    text = text.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
-
-    # xuống dòng
-    text = re.sub(r"\n+", '<break time="500ms"/>', text)
-
-    # dấu câu (QUAN TRỌNG: giữ dấu rồi mới thêm break)
-    text = re.sub(r"\.\s*", lambda m: f'.<break time="{int(cfg["dot"]*1000)}ms"/> ', text)
-    text = re.sub(r",\s*", lambda m: f',<break time="{int(cfg["comma"]*1000)}ms"/> ', text)
-    text = re.sub(r"!\s*", lambda m: f'!<break time="{int(cfg["exclaim"]*1000)}ms"/> ', text)
-
-    return text
+   
 
 cfg = {
     "dot": pause_dot,
