@@ -39,17 +39,6 @@ pause_dot = st.slider("Dấu chấm (.)", 0.0, 0.8, 0.3, 0.1)
 pause_comma = st.slider("Dấu phẩy (,)", 0.0, 0.5, 0.2, 0.1)
 pause_exclaim = st.slider("Dấu !", 0.0, 0.8, 0.4, 0.1)
 
-# ================= TEXT ENGINE (SSML) =================
-def story_engine(text, cfg):
-    text = text.strip()
-
-   
-
-cfg = {
-    "dot": pause_dot,
-    "comma": pause_comma,
-    "exclaim": pause_exclaim
-}
 
 # ================= SPLIT TEXT =================
 def split_text(text, max_length=400):
