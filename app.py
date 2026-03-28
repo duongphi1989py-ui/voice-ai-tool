@@ -7,8 +7,8 @@ import uuid
 
 st.set_page_config(page_title="Voice AI SaaS Pro", page_icon="🎙️")
 
-st.title("🎙️ Voice AI SaaS PRO (Smooth Version)")
-st.write("Text → Voice AI mượt như người thật")
+st.title("🎙️ Voice AI SaaS PRO (Smooth Real Voice)")
+st.write("Không dùng SSML → không đọc 'break time'")
 
 # ================= TEXT =================
 text = st.text_area("Nhập nội dung:", height=250)
@@ -24,24 +24,39 @@ voice_name = st.selectbox("Chọn giọng:", list(voices.keys()))
 
 # ================= EMOTION =================
 emotion_map = {
-    "Tự nhiên": {"rate": "+0%", "pitch": "+0Hz"},
-    "Vui vẻ": {"rate": "+15%", "pitch": "+20Hz"},
-    "Buồn": {"rate": "-15%", "pitch": "-20Hz"},
-    "Kể chuyện": {"rate": "-5%", "pitch": "+0Hz"},
-    "Quảng cáo": {"rate": "+20%", "pitch": "+10Hz"}
+    "Tự nhiên": "+0%",
+    "Vui vẻ": "+15%",
+    "Buồn": "-15%",
+    "Kể chuyện": "-5%",
+    "Quảng cáo": "+20%"
 }
 emotion_name = st.selectbox("🎭 Emotion", list(emotion_map.keys()))
 
-# ================= PAUSE =================
-st.subheader("⏱️ Ngắt nghỉ")
+# ================= STORY ENGINE =================
+def story_engine(text):
+    text = text.strip()
 
-pause_dot = st.slider("Dấu chấm (.)", 0.0, 0.8, 0.3, 0.1)
-pause_comma = st.slider("Dấu phẩy (,)", 0.0, 0.5, 0.2, 0.1)
-pause_exclaim = st.slider("Dấu !", 0.0, 0.8, 0.4, 0.1)
+    # xuống dòng → nghỉ nhẹ
+    text = text.replace("\n", ". ")
 
+    # tăng nhịp tự nhiên
+    text = re.sub(r"\.", ". ", text)
+    text = re.sub(r",", ", ", text)
+    text = re.sub(r"!", "! ", text)
 
-# ================= SPLIT TEXT =================
-def split_text(text, max_length=400):
+    # random pause nhẹ (giống người)
+    words = text.split()
+    out = []
+
+    for w in words:
+        out.append(w)
+        if random.random() < 0.03:
+            out.append("...")
+
+    return " ".join(out)
+
+# ================= SPLIT =================
+def split_text(text, max_length=250):
     sentences = re.split(r'(?<=[.!?])\s+', text)
     chunks = []
     current = ""
@@ -59,26 +74,18 @@ def split_text(text, max_length=400):
     return chunks
 
 # ================= GENERATE =================
-async def generate_long_voice(text, voice, rate, pitch, file_name):
+async def generate_voice(text, voice, rate, file_name):
     chunks = split_text(text)
 
     open(file_name, "wb").close()
 
     for i, chunk in enumerate(chunks):
-
-        ssml = f"""<speak>
-<voice name="{voice}">
-<prosody rate="{rate}" pitch="{pitch}">
-{chunk}
-</prosody>
-</voice>
-</speak>"""
-
         temp_file = f"temp_{i}.mp3"
 
         communicate = edge_tts.Communicate(
-            text=ssml,
-            voice=voice
+            text=chunk,
+            voice=voice,
+            rate=rate
         )
         await communicate.save(temp_file)
 
@@ -86,17 +93,17 @@ async def generate_long_voice(text, voice, rate, pitch, file_name):
             with open(temp_file, "rb") as f:
                 final.write(f.read())
 
-        await asyncio.sleep(0.05)
+        await asyncio.sleep(0.1)  # chống click
 
 # ================= CACHE =================
 @st.cache_data
-def cached_generate(text, voice, rate, pitch):
-    file_name = f"cache_{hash(text + voice + rate + pitch)}.mp3"
+def cached_generate(text, voice, rate):
+    file_name = f"cache_{hash(text + voice + rate)}.mp3"
 
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
     loop.run_until_complete(
-        generate_long_voice(text, voice, rate, pitch, file_name)
+        generate_voice(text, voice, rate, file_name)
     )
 
     return file_name
@@ -107,16 +114,13 @@ if st.button("🚀 Generate Voice"):
     if not text:
         st.warning("Nhập nội dung trước!")
     else:
-        emotion = emotion_map[emotion_name]
-
-        final_text = story_engine(text, cfg)
+        final_text = story_engine(text)
 
         with st.spinner("🎧 Đang tạo voice..."):
             file_name = cached_generate(
                 final_text,
                 voices[voice_name],
-                emotion["rate"],
-                emotion["pitch"]
+                emotion_map[emotion_name]
             )
 
         st.success("✅ Done!")
