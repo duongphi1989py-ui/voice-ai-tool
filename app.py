@@ -43,13 +43,16 @@ pause_exclaim = st.slider("Dấu !", 0.0, 0.8, 0.4, 0.1)
 def story_engine(text, cfg):
     text = text.strip()
 
-    # xuống dòng
-    text = text.replace("\n", '<break time="500ms"/>')
+    # escape ký tự nguy hiểm trong XML
+    text = text.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
 
-    # dấu câu
-    text = re.sub(r"\.", f'.<break time="{int(cfg["dot"]*1000)}ms"/>', text)
-    text = re.sub(r",", f',<break time="{int(cfg["comma"]*1000)}ms"/>', text)
-    text = re.sub(r"!", f'!<break time="{int(cfg["exclaim"]*1000)}ms"/>', text)
+    # xuống dòng
+    text = re.sub(r"\n+", '<break time="500ms"/>', text)
+
+    # dấu câu (QUAN TRỌNG: giữ dấu rồi mới thêm break)
+    text = re.sub(r"\.\s*", lambda m: f'.<break time="{int(cfg["dot"]*1000)}ms"/> ', text)
+    text = re.sub(r",\s*", lambda m: f',<break time="{int(cfg["comma"]*1000)}ms"/> ', text)
+    text = re.sub(r"!\s*", lambda m: f'!<break time="{int(cfg["exclaim"]*1000)}ms"/> ', text)
 
     return text
 
@@ -85,13 +88,13 @@ async def generate_long_voice(text, voice, rate, pitch, file_name):
 
     for i, chunk in enumerate(chunks):
 
-        ssml = f"""
-        <speak>
-            <prosody rate="{rate}" pitch="{pitch}">
-                {chunk}
-            </prosody>
-        </speak>
-        """
+        ssml = f"""<speak>
+<voice name="{voice}">
+<prosody rate="{rate}" pitch="{pitch}">
+{chunk}
+</prosody>
+</voice>
+</speak>"""
 
         temp_file = f"temp_{i}.mp3"
 
@@ -101,12 +104,11 @@ async def generate_long_voice(text, voice, rate, pitch, file_name):
         )
         await communicate.save(temp_file)
 
-        # nối file mượt hơn
         with open(file_name, "ab") as final:
             with open(temp_file, "rb") as f:
                 final.write(f.read())
 
-        await asyncio.sleep(0.05)  # chống click
+        await asyncio.sleep(0.05)
 
 # ================= CACHE =================
 @st.cache_data
