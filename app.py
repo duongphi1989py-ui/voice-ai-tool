@@ -4,6 +4,7 @@ import edge_tts
 import re
 import random
 import uuid
+import os
 import hashlib
 from tts_utils.text_processor import process_text
 def get_hash(text, voice, rate):
@@ -54,7 +55,7 @@ def story_engine(text):
 
     for w in words:
         out.append(w)
-        if random.random() < 0.03:
+        if random.random() < 0.02:
             out.append("...")
 
     return " ".join(out)
@@ -89,7 +90,7 @@ async def generate_voice(text, voice, rate, file_name):
         communicate = edge_tts.Communicate(
             text=chunk,
             voice=voice,
-            rate="+5%"
+            rate=rate
         )
         await communicate.save(temp_file)
 
@@ -103,11 +104,11 @@ async def generate_voice(text, voice, rate, file_name):
 @st.cache_data
 def cached_generate(text, voice, rate):
     file_name = f"cache_{get_hash(text, voice, rate)}.mp3"
-
+if not os.path.exists(file_name):
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
     loop.run_until_complete(
-        generate_voice(processed_text, voice, rate, file_name)
+        generate_voice(text, voice, rate, file_name)
     )
 
     return file_name
