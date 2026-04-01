@@ -6,6 +6,7 @@ import random
 import uuid
 import os
 import hashlib
+from tts_utils.text_processor import process_text, fix_upper_after_dot
 from tts_utils.text_processor import process_text
 def get_hash(text, voice, rate):
     raw = text + voice + rate
@@ -18,6 +19,7 @@ st.write("Không dùng SSML → không đọc 'break time'")
 # ================= TEXT =================
 text = st.text_area("Nhập nội dung:", height=250)
 processed_text = process_text(text)
+processed_text = fix_upper_after_dot(processed_text)
 # ================= VOICES =================
 voices = {
     "Nữ Việt Nam": "vi-VN-HoaiMyNeural",
