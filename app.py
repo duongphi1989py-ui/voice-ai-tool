@@ -104,7 +104,7 @@ async def generate_voice(text, voice, rate, file_name):
 @st.cache_data
 def cached_generate(text, voice, rate):
     file_name = f"cache_{get_hash(text, voice, rate)}.mp3"
-if not os.path.exists(file_name):
+    if not os.path.exists(file_name):
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
     loop.run_until_complete(
