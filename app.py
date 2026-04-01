@@ -52,7 +52,7 @@ def apply_preset(text, rate, preset_name):
     return text, rate
 
 # ================= SPLIT =================
-def split_text(text, max_length=1000):
+def split_text(text, max_length=1800):
     sentences = text.split(". ")
     chunks = []
     current = ""
@@ -70,27 +70,27 @@ def split_text(text, max_length=1000):
     return chunks
 
 # ================= GENERATE =================
-async def generate_voice(text, voice, rate, file_name):
-    chunks = split_text(text)
+async def generate_voice_stream(text, voice, rate, file_name):
+    chunks = split_text(text, max_length=1800)
 
-    open(file_name, "wb").close()
+    with open(file_name, "wb") as final:
 
-    for i, chunk in enumerate(chunks):
-        temp_file = f"temp_{i}.mp3"
+        for chunk in chunks:
+            communicate = edge_tts.Communicate(
+                text=chunk,
+                voice=voice,
+                rate=rate
+            )
 
-        communicate = edge_tts.Communicate(
-            text=chunk,
-            voice=voice,
-            rate=rate
-        )
-        await communicate.save(temp_file)
+            # 🔥 thêm buffer ở đây
+            buffer = bytearray()
 
-        with open(file_name, "ab") as final:
-            with open(temp_file, "rb") as f:
-                final.write(f.read())
+            async for data in communicate.stream():
+                if data["type"] == "audio":
+                    buffer.extend(data["data"])
 
-        await asyncio.sleep(0.05)
-
+            # 🔥 ghi 1 lần → tránh khựng
+            final.write(buffer)
 # ================= CACHE =================
 @st.cache_data
 def cached_generate(text, voice, rate):
@@ -100,7 +100,7 @@ def cached_generate(text, voice, rate):
         loop = asyncio.new_event_loop()
         asyncio.set_event_loop(loop)
         loop.run_until_complete(
-            generate_voice(text, voice, rate, file_name)
+            generate_voice_stream(text, voice, rate, file_name)
         )
 
     return file_name
