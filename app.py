@@ -7,7 +7,6 @@ import uuid
 import os
 import hashlib
 from tts_utils.text_processor import process_text, fix_upper_after_dot
-from tts_utils.text_processor import process_text
 def get_hash(text, voice, rate):
     raw = text + voice + rate
     return hashlib.md5(raw.encode()).hexdigest()
@@ -20,6 +19,7 @@ st.write("Không dùng SSML → không đọc 'break time'")
 text = st.text_area("Nhập nội dung:", height=250)
 processed_text = process_text(text)
 processed_text = fix_upper_after_dot(processed_text)
+final_text = story_engine(processed_text)
 # ================= VOICES =================
 voices = {
     "Nữ Việt Nam": "vi-VN-HoaiMyNeural",
@@ -47,7 +47,6 @@ def story_engine(text):
     text = text.replace("\n", ". ")
 
     # tăng nhịp tự nhiên
-    text = re.sub(r"\.", ". ", text)
     text = re.sub(r",", ", ", text)
     text = re.sub(r"!", "! ", text)
 
@@ -98,7 +97,7 @@ async def generate_voice(text, voice, rate, file_name):
             with open(temp_file, "rb") as f:
                 final.write(f.read())
 
-        await asyncio.sleep(random.uniform(0.15, 0.35))
+        await asyncio.sleep(random.uniform(0.05, 0.15))
 
 # ================= CACHE =================
 import os
@@ -121,7 +120,6 @@ if st.button("🚀 Generate Voice"):
     if not text:
         st.warning("Nhập nội dung trước!")
     else:
-        final_text = story_engine(text)
 
         with st.spinner("🎧 Đang tạo voice..."):
             file_name = cached_generate(
