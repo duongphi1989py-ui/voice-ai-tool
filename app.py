@@ -55,8 +55,8 @@ def story_engine(text):
 
     for w in words:
         out.append(w)
-        if random.random() < 0.02:
-            out.append(",")
+        if random.random() < 0.01:
+            out.append(".")
 
     return " ".join(out)
 
