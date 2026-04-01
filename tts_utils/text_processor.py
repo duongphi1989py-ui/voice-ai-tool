@@ -12,7 +12,7 @@ def process_text(text: str) -> str:
     text = text.replace("?", "? .")
     text = text.replace("[", "[ ")
     text = text.replace("]", "] ")
-
+    text = text.replace(". ", ". .")
     text = text.replace("\n", "\n.")  # xuống dòng nghỉ vừa
 
     return text
