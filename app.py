@@ -53,22 +53,22 @@ def apply_preset(text, rate, preset_name):
 
 # ================= SPLIT =================
 def split_text(text, max_length=1200):
-    sentences = text.split(". ")
+    sentences = re.split(r'(?<=[.!?]) +', text)
+
     chunks = []
     current = ""
 
     for sentence in sentences:
-        if len(current) + len(sentence) < max_length:
-            current += sentence + ". "
+        if len(current) + len(sentence) <= max_length:
+            current += sentence + " "
         else:
             chunks.append(current.strip())
-            current = sentence + ". "
+            current = sentence + " "
 
     if current:
         chunks.append(current.strip())
 
     return chunks
-
 # ================= GENERATE =================
 async def generate_voice(text, voice, rate, file_name):
 
