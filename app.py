@@ -70,32 +70,33 @@ def split_text(text, max_length=1800):
     return chunks
 
 # ================= GENERATE =================
-from pydub import AudioSegment
-
 async def generate_voice(text, voice, rate, file_name):
 
-    chunks = split_text(text, max_length=1800)
+    chunks = split_text(text, max_length=1400)
 
-    combined = AudioSegment.empty()
+    with open(file_name, "wb") as final:
 
-    for i, chunk in enumerate(chunks):
-        temp_file = f"temp_{i}.mp3"
+        for i, chunk in enumerate(chunks):
 
-        communicate = edge_tts.Communicate(
-            text=chunk,
-            voice=voice,
-            rate=rate
-        )
+            communicate = edge_tts.Communicate(
+                text=chunk,
+                voice=voice,
+                rate=rate
+            )
 
-        await communicate.save(temp_file)
+            temp_file = f"temp_{i}.mp3"
+            await communicate.save(temp_file)
 
-        audio = AudioSegment.from_mp3(temp_file)
+            with open(temp_file, "rb") as f:
+                data = f.read()
 
-        # 🔥 nối mượt (có crossfade)
-        combined = combined.append(audio, crossfade=80)
+                # 🔥 bỏ header MP3 từ chunk sau → tránh khựng
+                if i > 0:
+                    data = data[300:]  
 
-    # 🔥 export 1 file duy nhất
-    combined.export(file_name, format="mp3")
+                final.write(data)
+
+            await asyncio.sleep(0.02)
 # ================= CACHE =================
 @st.cache_data
 def cached_generate(text, voice, rate):
