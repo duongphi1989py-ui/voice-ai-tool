@@ -85,7 +85,7 @@ async def generate_voice(text, voice, rate, file_name):
         communicate = edge_tts.Communicate(
             text=chunk,
             voice=voice,
-            rate=rate
+            rate="+5%"
         )
         await communicate.save(temp_file)
 
