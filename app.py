@@ -31,9 +31,12 @@ def process_text(text):
     return text.strip()
 
 def fix_upper_after_dot(text):
+    def lower_match(m):
+        return m.group(0).lower()
+
     return re.sub(
-        r'(?<=[.!?])\s+["“]?([A-ZĐ])',
-        lambda m: " " + m.group(1).lower(),
+        r'(?<=[.!?])\s+[“"\'(]*[A-ZĐ]',
+        lower_match,
         text
     )
 
