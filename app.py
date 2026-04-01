@@ -39,7 +39,20 @@ def fix_upper_after_dot(text):
         lower_match,
         text
     )
+def soften_dots(text):
+    sentences = text.split(". ")
+    result = []
 
+    for i, s in enumerate(sentences):
+        if i < len(sentences) - 1:
+            if random.random() < 0.7:
+                result.append(s + ", ")
+            else:
+                result.append(s + ". ")
+        else:
+            result.append(s)
+
+    return "".join(result)
 # ================= STORY ENGINE =================
 def story_engine(text):
     text = text.strip()
@@ -139,6 +152,7 @@ if st.button("🚀 Generate Voice"):
         # 🔥 FLOW CHUẨN
         processed_text = process_text(text)
         processed_text = fix_upper_after_dot(processed_text)
+        processed_text = soften_dots(processed_text)
         processed_text = re.sub(r'\s+', ' ', processed_text)
 
         final_text = story_engine(processed_text)
