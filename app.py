@@ -19,26 +19,40 @@ def get_hash(text, voice, rate):
     raw = text + voice + rate
     return hashlib.md5(raw.encode()).hexdigest()
 
-# 🔥 FIX QUOTES (quan trọng)
+# 🔥 FIX QUOTES
 def fix_quotes(text: str) -> str:
-    # "text" → , text,
     return re.sub(r'"(.*?)"', r', \1,', text)
 
 # ================= STORY ENGINE =================
 def story_engine(text):
     text = text.strip()
 
-    # xuống dòng → nghỉ nhẹ
     text = text.replace("\n", ", ")
-
-    # nhịp nhẹ
     text = re.sub(r",", ", ", text)
     text = re.sub(r"!", "! ", text)
 
     return text
 
+# ================= PRESET =================
+def apply_preset(text, rate, preset_name):
+    if preset_name == "🎧 Truyện":
+        text = text.replace(". ", ", ")
+        text = text.replace("!", ", ")
+        text = text.replace("?", ", ")
+        rate = "-5%"
+
+    elif preset_name == "🎬 TikTok":
+        text = text.replace(". ", ", ")
+        rate = "+12%"
+
+    elif preset_name == "📢 Quảng cáo":
+        text = text.replace(". ", "! ")
+        rate = "+18%"
+
+    return text, rate
+
 # ================= SPLIT =================
-def split_text(text, max_length=1000):  # giảm xuống để đỡ khựng
+def split_text(text, max_length=1000):
     sentences = text.split(". ")
     chunks = []
     current = ""
@@ -75,7 +89,6 @@ async def generate_voice(text, voice, rate, file_name):
             with open(temp_file, "rb") as f:
                 final.write(f.read())
 
-        # 🔥 delay nhỏ để tránh giật
         await asyncio.sleep(0.05)
 
 # ================= CACHE =================
@@ -105,12 +118,18 @@ voice_name = st.selectbox("Chọn giọng:", list(voices.keys()))
 
 emotion_map = {
     "Tự nhiên": "+0%",
-    "Vui vẻ": "+15%",
-    "Buồn": "-15%",
+    "Vui vẻ": "+10%",
+    "Buồn": "-10%",
     "Kể chuyện": "-5%",
-    "Quảng cáo": "+20%"
+    "Quảng cáo": "+15%"
 }
 emotion_name = st.selectbox("🎭 Emotion", list(emotion_map.keys()))
+
+# 🔥 PRESET UI
+preset = st.selectbox(
+    "🎚️ Preset giọng",
+    ["Giữ nguyên", "🎧 Truyện", "🎬 TikTok", "📢 Quảng cáo"]
+)
 
 # ================= RUN =================
 if st.button("🚀 Generate Voice"):
@@ -118,26 +137,25 @@ if st.button("🚀 Generate Voice"):
     if not text:
         st.warning("Nhập nội dung trước!")
     else:
-        # 🔥 FLOW CHUẨN CHỐNG KHỰNG
+        # 🔥 PROCESS
         processed_text = process_text(text)
         processed_text = fix_upper_after_dot(processed_text)
-
-        # 🔥 FIX DẤU NGOẶC KÉP
         processed_text = fix_quotes(processed_text)
-
-        # 🔥 giảm pause dấu chấm
-        processed_text = processed_text.replace(". ", ", ")
 
         final_text = story_engine(processed_text)
 
-        # debug nếu cần
-        # st.write(final_text)
+        # 🔥 APPLY PRESET (không phá config cũ)
+        final_text, final_rate = apply_preset(
+            final_text,
+            emotion_map[emotion_name],
+            preset
+        )
 
         with st.spinner("🎧 Đang tạo voice..."):
             file_name = cached_generate(
                 final_text,
                 voices[voice_name],
-                emotion_map[emotion_name]
+                final_rate
             )
 
         st.success("✅ Done!")
