@@ -33,7 +33,7 @@ def story_engine(text):
     return text
 
 # ================= SPLIT =================
-def split_text(text, max_length=600):
+def split_text(text, max_length=1200):
     sentences = text.split(". ")
     chunks = []
     current = ""
@@ -70,7 +70,7 @@ async def generate_voice(text, voice, rate, file_name):
             with open(temp_file, "rb") as f:
                 final.write(f.read())
 
-        await asyncio.sleep(random.uniform(0.05, 0.15))
+        await asyncio.sleep(0.05)
 
 # ================= CACHE =================
 @st.cache_data
