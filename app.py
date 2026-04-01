@@ -4,7 +4,11 @@ import edge_tts
 import re
 import random
 import uuid
+import hashlib
 from tts_utils.text_processor import process_text
+def get_hash(text, voice, rate):
+    raw = text + voice + rate
+    return hashlib.md5(raw.encode()).hexdigest()
 st.set_page_config(page_title="Voice AI SaaS Pro", page_icon="🎙️")
 
 st.title("🎙️ Voice AI SaaS PRO (Smooth Real Voice)")
@@ -98,7 +102,7 @@ async def generate_voice(text, voice, rate, file_name):
 # ================= CACHE =================
 @st.cache_data
 def cached_generate(text, voice, rate):
-    file_name = f"cache_{abs(hash(text + voice + rate))}.mp3"
+    file_name = f"cache_{get_hash(text, voice, rate)}.mp3"
 
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
