@@ -56,17 +56,17 @@ def story_engine(text):
     return " ".join(out)
 
 # ================= SPLIT =================
-def split_text(text, max_length=250):
-    sentences = re.split(r'(?<=[.!?])\s+', text)
+def split_text(text, max_length=600):
+    sentences = text.split(". ")
     chunks = []
     current = ""
 
-    for s in sentences:
-        if len(current) + len(s) < max_length:
-            current += " " + s
+    for sentence in sentences:
+        if len(current) + len(sentence) < max_length:
+            current += sentence + ". "
         else:
             chunks.append(current.strip())
-            current = s
+            current = sentence + ". "
 
     if current:
         chunks.append(current.strip())
