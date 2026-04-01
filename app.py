@@ -93,7 +93,7 @@ async def generate_voice(text, voice, rate, file_name):
             with open(temp_file, "rb") as f:
                 final.write(f.read())
 
-        await asyncio.sleep(0.1)  # chống click
+        await asyncio.sleep(random.uniform(0.15, 0.35))
 
 # ================= CACHE =================
 @st.cache_data
