@@ -52,7 +52,7 @@ def apply_preset(text, rate, preset_name):
     return text, rate
 
 # ================= SPLIT =================
-def split_text(text, max_length=1800):
+def split_text(text, max_length=1200):
     sentences = text.split(". ")
     chunks = []
     current = ""
@@ -72,7 +72,7 @@ def split_text(text, max_length=1800):
 # ================= GENERATE =================
 async def generate_voice(text, voice, rate, file_name):
 
-    chunks = split_text(text, max_length=1400)
+    chunks = split_text(text, max_length=1200)
 
     with open(file_name, "wb") as final:
 
