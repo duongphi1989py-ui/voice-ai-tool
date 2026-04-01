@@ -103,7 +103,7 @@ def cached_generate(text, voice, rate):
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
     loop.run_until_complete(
-        generate_voice(text, voice, rate, file_name)
+        generate_voice(processed_text, voice, rate, file_name)
     )
 
     return file_name
