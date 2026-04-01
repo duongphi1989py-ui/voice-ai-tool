@@ -4,7 +4,7 @@ import edge_tts
 import re
 import random
 import uuid
-
+from tts_utils.text_processor import process_text
 st.set_page_config(page_title="Voice AI SaaS Pro", page_icon="🎙️")
 
 st.title("🎙️ Voice AI SaaS PRO (Smooth Real Voice)")
@@ -12,7 +12,7 @@ st.write("Không dùng SSML → không đọc 'break time'")
 
 # ================= TEXT =================
 text = st.text_area("Nhập nội dung:", height=250)
-
+processed_text = process_text(text)
 # ================= VOICES =================
 voices = {
     "Nữ Việt Nam": "vi-VN-HoaiMyNeural",
