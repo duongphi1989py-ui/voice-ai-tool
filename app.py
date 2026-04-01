@@ -115,6 +115,7 @@ if st.button("🚀 Generate Voice"):
         # 🔥 PROCESS FLOW CHUẨN
         processed_text = process_text(text)
         processed_text = fix_upper_after_dot(processed_text)
+        processed_text = processed_text.replace(". ", ", ")
         final_text = story_engine(processed_text)
 
         # Debug nếu cần
