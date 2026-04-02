@@ -132,7 +132,7 @@ if st.button("🚀 Generate Voice"):
         processed_text = smooth_text(processed_text)
 
         # 🔥 giảm pause dấu chấm
-        processed_text = processed_text.replace(". ", ", ")
+       
 
         # clean space
         processed_text = re.sub(r'\s+', ' ', processed_text)
