@@ -184,3 +184,25 @@ def fix_numbers_level_max(text: str) -> str:
         text = text.replace(key, read_decimal_safe(val))
 
     return text
+# ================= PROTECT DECIMAL =================
+def protect_decimal(text: str):
+    decimals = {}
+
+    def replacer(match):
+        key = f"__DEC_{len(decimals)}__"
+        decimals[key] = match.group()
+        return key
+
+    text = re.sub(r'\b\d+\.\d+\b', replacer, text)
+    return text, decimals
+
+
+def restore_decimal(text: str, decimals: dict):
+    for key, val in decimals.items():
+        parts = val.split(".")
+        int_part = read_number(parts[0])
+        dec_part = " ".join(nums[int(d)] for d in parts[1])
+
+        text = text.replace(key, f"{int_part} phẩy {dec_part}")
+
+    return text
