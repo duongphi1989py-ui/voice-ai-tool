@@ -70,7 +70,7 @@ def process_text(text: str) -> str:
     # fix dấu cơ bản
     text = text.replace(",", ", ")
     text = text.replace(":", ": ")
-    text = text.replace("!", "! ")
+    text = text.replace("!", ", ")
     text = text.replace("?", "? ")
 
     # bỏ dấu " gây khựng → đổi thành ,
