@@ -124,7 +124,19 @@ def cached_generate(text, voice, rate):
     return file_name
 
 # ================= UI =================
-text = st.text_area("Nhập nội dung:", height=250)
+if "text_input" not in st.session_state:
+    st.session_state.text_input = ""
+
+text = st.text_area("Nhập nội dung:", height=250, key="text_input")
+col1, col2 = st.columns([1,1])
+
+with col1:
+    if st.button("🗑️ Xoá nhanh"):
+        st.session_state.text_input = ""
+        st.rerun()
+
+with col2:
+    st.write("")  # để cân layout
 
 voices = {
     "Nữ Việt Nam": "vi-VN-HoaiMyNeural",
