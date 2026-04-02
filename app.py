@@ -24,90 +24,28 @@ if "text_input" not in st.session_state:
     st.session_state.text_input = ""
 
 # ================= UTILS =================
-# ================= UI PRO =================
+def get_hash(text, voice, rate):
+    raw = text + voice + rate
+    return hashlib.md5(raw.encode()).hexdigest()
 
-st.markdown("## 🎙️ Voice AI Studio")
+# ================= SPLIT =================
+def split_text(text, max_length=500):
+    sentences = re.split(r'(?<=[.!?])\s+', text)
 
-col_left, col_right = st.columns([3, 1])  # 👈 trái to, phải nhỏ
+    chunks = []
+    current = ""
 
-# ===== CỘT TRÁI (TEXT) =====
-with col_left:
-    st.markdown("### 📝 Nội dung")
+    for sentence in sentences:
+        if len(current) + len(sentence) < max_length:
+            current += sentence + " "
+        else:
+            chunks.append(current.strip())
+            current = sentence + " "
 
-    text = st.text_area(
-        "",
-        height=500,   # 👈 to dễ nhìn
-        key="text_input",
-        placeholder="Nhập nội dung dài ở đây..."
-    )
+    if current:
+        chunks.append(current.strip())
 
-    # nút xoá
-    def clear_text():
-        
-
-    st.button("🗑️ Xóa nội dung", on_click=clear_text)
-
-# ===== CỘT PHẢI (CONTROL + AUDIO) =====
-with col_right:
-    st.markdown("### ⚙️ Cài đặt")
-
-    voices = {
-        "Nữ VN": "vi-VN-HoaiMyNeural",
-        "Nam VN": "vi-VN-NamMinhNeural",
-        "Nữ US": "en-US-JennyNeural",
-        "Nam US": "en-US-GuyNeural"
-    }
-    voice_name = st.selectbox("Giọng đọc", list(voices.keys()))
-
-    emotion_map = {
-        "Tự nhiên": "+0%",
-        "Vui": "+15%",
-        "Buồn": "-15%",
-        "Kể chuyện": "-5%",
-        "QC": "+20%"
-    }
-    emotion_name = st.selectbox("Emotion", list(emotion_map.keys()))
-
-    st.markdown("---")
-
-    generate_btn = st.button("🚀 Generate", use_container_width=True)
-
-    st.markdown("---")
-
-    audio_placeholder = st.empty()
-
-# ================= RUN =================
-if generate_btn:
-
-    if not text:
-        st.warning("Nhập nội dung trước!")
-    else:
-        processed_text = process_text(text)
-        processed_text = fix_numbers_ultimate(processed_text)
-        processed_text = fix_upper_after_dot(processed_text)
-
-        final_text = story_engine(processed_text)
-
-        with st.spinner("🎧 Đang tạo voice..."):
-            file_name = cached_generate(
-                final_text,
-                voices[voice_name],
-                emotion_map[emotion_name]
-            )
-
-        st.success("✅ Done!")
-
-        # 👉 audio nằm bên phải
-        with col_right:
-            audio_placeholder.audio(file_name)
-
-            with open(file_name, "rb") as f:
-                st.download_button(
-                    "📥 Tải MP3",
-                    f,
-                    file_name="voice.mp3",
-                    use_container_width=True
-                )
+    return chunks
 
 # ================= GENERATE =================
 async def generate_voice(text, voice, rate, file_name):
