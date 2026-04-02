@@ -90,17 +90,10 @@ text = st.text_area(
     key="text_input"
 )
 
-# 🔥 NÚT XOÁ NHANH
-col1, col2 = st.columns(2)
-with col1:
-    # ================= CLEAR BUTTON =================
 def clear_text():
     st.session_state["text_input"] = ""
 
 st.button("🗑️ Xóa nhanh", on_click=clear_text)
-
-with col2:
-    st.write("")
 
 voices = {
     "Nữ Việt Nam": "vi-VN-HoaiMyNeural",
