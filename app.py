@@ -5,80 +5,42 @@ import re
 import random
 import os
 import hashlib
+
 from tts_utils.text_processor import (
     process_text,
     fix_upper_after_dot,
     soften_dots,
-    fix_numbers_ultimate
+    fix_numbers_ultimate,
+    story_engine
 )
+
 # ================= CONFIG =================
 st.set_page_config(page_title="Voice AI SaaS Pro", page_icon="🎙️")
 
 st.title("🎙️ Voice AI SaaS PRO (Smooth Real Voice)")
-st.write("Không khựng giữa câu – nghỉ tự nhiên như người")
+st.write("Không dùng SSML → đọc mượt như người")
+
+# ================= SESSION STATE =================
+if "text_input" not in st.session_state:
+    st.session_state.text_input = ""
 
 # ================= UTILS =================
 def get_hash(text, voice, rate):
     raw = text + voice + rate
     return hashlib.md5(raw.encode()).hexdigest()
 
-# ================= TEXT PROCESS =================
-def process_text(text):
-    text = re.sub(r'\n+', '\n', text)
-    text = re.sub(r'\s+', ' ', text)
-
-    text = text.replace('"', ', ')
-    text = text.replace(",", ", ")
-    text = text.replace(".", ". ")
-    text = text.replace("!", "! ")
-    text = text.replace("?", "? ")
-
-    return text.strip()
-
-def fix_upper_after_dot(text):
-    def lower_match(m):
-        return m.group(0).lower()
-
-    return re.sub(
-        r'(?<=[.!?])\s+[“"\'(]*[A-ZĐ]',
-        lower_match,
-        text
-    )
-def soften_dots(text):
+# ================= SPLIT =================
+def split_text(text, max_length=400):  # 🔥 giảm khựng
     sentences = text.split(". ")
-    result = []
-
-    for i, s in enumerate(sentences):
-        if i < len(sentences) - 1:
-            if random.random() < 0.7:
-                result.append(s + ", ")
-            else:
-                result.append(s + ". ")
-        else:
-            result.append(s)
-
-    return "".join(result)
-# ================= STORY ENGINE =================
-def story_engine(text):
-    text = text.strip()
-
-    text = text.replace("\n", ". ")
-
-    return text
-
-# ================= SPLIT CHUẨN =================
-def split_text(text, max_length=1300):
-    sentences = re.split(r'(?<=[.!?]) +', text)
-
     chunks = []
     current = ""
 
     for sentence in sentences:
-        if len(current) + len(sentence) <= max_length:
-            current += sentence + " "
+        if len(current) + len(sentence) < max_length:
+            current += sentence + ". "
         else:
             chunks.append(current.strip())
-            current = sentence + " "
+            current = sentence + ". "
 
     if current:
         chunks.append(current.strip())
@@ -87,32 +49,25 @@ def split_text(text, max_length=1300):
 
 # ================= GENERATE =================
 async def generate_voice(text, voice, rate, file_name):
-
     chunks = split_text(text)
 
-    with open(file_name, "wb") as final:
+    open(file_name, "wb").close()
 
-        for i, chunk in enumerate(chunks):
+    for i, chunk in enumerate(chunks):
+        temp_file = f"temp_{i}.mp3"
 
-            communicate = edge_tts.Communicate(
-                text=chunk,
-                voice=voice,
-                rate=rate
-            )
+        communicate = edge_tts.Communicate(
+            text=chunk,
+            voice=voice,
+            rate=rate
+        )
+        await communicate.save(temp_file)
 
-            temp_file = f"temp_{i}.mp3"
-            await communicate.save(temp_file)
-
+        with open(file_name, "ab") as final:
             with open(temp_file, "rb") as f:
-                data = f.read()
+                final.write(f.read())
 
-                # 🔥 bỏ header tránh khựng
-                if i > 0:
-                    data = data[300:]
-
-                final.write(data)
-
-            await asyncio.sleep(0.02)
+        await asyncio.sleep(0.08)  # 🔥 mượt hơn
 
 # ================= CACHE =================
 @st.cache_data
@@ -129,17 +84,21 @@ def cached_generate(text, voice, rate):
     return file_name
 
 # ================= UI =================
-def clear_text():
-    st.session_state.text_input = ""
+text = st.text_area(
+    "Nhập nội dung:",
+    height=250,
+    key="text_input"
+)
 
-if "text_input" not in st.session_state:
-    st.session_state.text_input = ""
+# 🔥 NÚT XOÁ NHANH
+col1, col2 = st.columns(2)
+with col1:
+    if st.button("🗑️ Xóa nhanh"):
+        st.session_state.text_input = ""
+        st.rerun()
 
-text = st.text_area("Nhập nội dung:", height=250, key="text_input")
-
-st.button("🗑️ Xoá nhanh", on_click=clear_text)
-
-
+with col2:
+    st.write("")
 
 voices = {
     "Nữ Việt Nam": "vi-VN-HoaiMyNeural",
@@ -164,15 +123,27 @@ if st.button("🚀 Generate Voice"):
     if not text:
         st.warning("Nhập nội dung trước!")
     else:
-        # 🔥 FLOW FINAL FIX 100%
-
+        # 🔥 FLOW FINAL
         processed_text = process_text(text)
-        processed_text = fix_numbers_ultimate(processed_text)  # 👈 xử lý số
+
+        processed_text = fix_numbers_ultimate(processed_text)
+
         processed_text = fix_upper_after_dot(processed_text)
+
         processed_text = soften_dots(processed_text)
+
+        # 🔥 giảm pause dấu chấm
+        processed_text = processed_text.replace(". ", ", ")
+
+        # clean space
         processed_text = re.sub(r'\s+', ' ', processed_text)
         processed_text = processed_text.replace("  ", " ")
+
         final_text = story_engine(processed_text)
+
+        # DEBUG nếu cần
+        # st.write(final_text)
+
         with st.spinner("🎧 Đang tạo voice..."):
             file_name = cached_generate(
                 final_text,
