@@ -30,17 +30,19 @@ def get_hash(text, voice, rate):
     return hashlib.md5(raw.encode()).hexdigest()
 
 # ================= SPLIT =================
-def split_text(text, max_length=400):  # 🔥 giảm khựng
-    sentences = text.split(". ")
+def split_text(text, max_length=350):
+    # chia theo dấu ngắt tự nhiên hơn
+    sentences = re.split(r'(?<=[,.!?])\s+', text)
+
     chunks = []
     current = ""
 
     for sentence in sentences:
         if len(current) + len(sentence) < max_length:
-            current += sentence + ". "
+            current += sentence + " "
         else:
             chunks.append(current.strip())
-            current = sentence + ". "
+            current = sentence + " "
 
     if current:
         chunks.append(current.strip())
@@ -126,6 +128,7 @@ if st.button("🚀 Generate Voice"):
         processed_text = fix_upper_after_dot(processed_text)
 
         processed_text = soften_dots(processed_text)
+        processed_text = smooth_text(processed_text)
 
         # 🔥 giảm pause dấu chấm
         processed_text = processed_text.replace(". ", ", ")
