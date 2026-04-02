@@ -167,8 +167,7 @@ if st.button("🚀 Generate Voice"):
         processed_text = soften_dots(processed_text)
         processed_text = re.sub(r'\s+', ' ', processed_text)
         processed_text = processed_text.replace("  ", " ")
-
-final_text = story_engine(processed_text)
+        final_text = story_engine(processed_text)
         with st.spinner("🎧 Đang tạo voice..."):
             file_name = cached_generate(
                 final_text,
