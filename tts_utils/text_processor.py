@@ -74,7 +74,7 @@ def process_text(text: str) -> str:
     text = text.replace("?", ", ")
 
     # bỏ dấu " gây khựng → đổi thành ,
-    text = text.replace('"', ', ')
+    text = text.replace('"', '')
 
     return text
 
