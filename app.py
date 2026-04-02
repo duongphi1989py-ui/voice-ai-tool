@@ -70,7 +70,7 @@ async def generate_voice(text, voice, rate, file_name):
             with open(temp_file, "rb") as f:
                 final.write(f.read())
 
-        await asyncio.sleep(0.08)  # 🔥 mượt hơn
+        await asyncio.sleep(0.12)  # 🔥 mượt hơn
 
 # ================= CACHE =================
 @st.cache_data
