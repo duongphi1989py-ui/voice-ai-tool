@@ -135,31 +135,52 @@ def fix_upper_after_dot(text: str) -> str:
     )
 
 # ================= MAIN PROCESS =================
+# ================= FIX NUMBER ULTIMATE 2 =================
 def fix_numbers_level_max(text: str) -> str:
 
-    # giờ
-    text = re.sub(r'\b(\d{1,2})[:h](\d{1,2})\b', read_time, text)
+    # ================= PROTECT DECIMAL =================
+    decimals = {}
 
-    # %
-    text = re.sub(r'\b(\d+)%', read_percent, text)
+    def protect_decimal(match):
+        key = f"__DEC_{len(decimals)}__"
+        decimals[key] = match.group()
+        return key
 
-    # tiền VND
-    text = re.sub(r'\b(\d+)[\.,]?\d*đ', read_money, text)
+    text = re.sub(r'\b\d+\.\d+\b', protect_decimal, text)
 
-    # k, tr
-    text = re.sub(r'\b(\d+)(k|tr)\b', read_short_money, text)
+    # ================= TIME =================
+    text = re.sub(r'\b(\d{1,2})[:h](\d{1,2})\b',
+                  lambda m: f"{read_number(m.group(1))} giờ {read_number(m.group(2))}", text)
 
-    # đơn vị
-    text = re.sub(r'\b(\d+)(km|kg|m)\b', read_unit, text)
+    # ================= % =================
+    text = re.sub(r'\b(\d+)%',
+                  lambda m: f"{read_number(m.group(1))} phần trăm", text)
 
-    # số dạng 1,000
+    # ================= MONEY =================
+    text = re.sub(r'\b(\d+)[\.,]?\d*đ',
+                  lambda m: f"{read_number(m.group(1))} đồng", text)
+
+    # ================= k, tr =================
+    text = re.sub(r'\b(\d+)(k|tr)\b',
+                  lambda m: f"{read_number(m.group(1))} nghìn" if m.group(2) == "k"
+                  else f"{read_number(m.group(1))} triệu", text)
+
+    # ================= 1,234 =================
     text = re.sub(r'\b\d{1,3}(,\d{3})+\b',
                   lambda m: read_number(m.group().replace(",", "")), text)
 
-    # số thập phân
-    text = re.sub(r'\b(\d+)\.(\d+)\b', read_decimal, text)
+    # ================= INTEGER =================
+    text = re.sub(r'\b\d+\b',
+                  lambda m: read_number(m.group()), text)
 
-    # số thường
-    text = re.sub(r'\b\d+\b', lambda m: read_number(m.group()), text)
+    # ================= RESTORE DECIMAL =================
+    def read_decimal_safe(s):
+        parts = s.split(".")
+        int_part = read_number(parts[0])
+        dec_part = " ".join(nums[int(d)] for d in parts[1])
+        return f"{int_part} phẩy {dec_part}"
+
+    for key, val in decimals.items():
+        text = text.replace(key, read_decimal_safe(val))
 
     return text
