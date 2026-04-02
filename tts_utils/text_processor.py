@@ -119,7 +119,7 @@ def process_text(text: str) -> str:
     text = text.replace("?", "? ")
 
     # 🔥 giảm độ khựng dấu chấm
-    text = text.replace(". ", ", ")
+    text = text.replace(". ", ". ")
 
     # thay " thành nghỉ nhẹ
     text = text.replace('"', ", ")
