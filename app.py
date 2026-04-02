@@ -9,10 +9,8 @@ import hashlib
 from tts_utils.text_processor import (
     process_text,
     fix_upper_after_dot,
-    soften_dots,
     fix_numbers_ultimate,
-    story_engine,
-    smooth_text
+    story_engine
 )
 
 # ================= CONFIG =================
