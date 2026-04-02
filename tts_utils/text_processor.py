@@ -87,3 +87,20 @@ def story_engine(text):
     text = re.sub(r"!", "! ", text)
 
     return text
+def smooth_text(text):
+    # giảm cụm gây khựng
+    text = re.sub(r'\s*,\s*', ', ', text)
+    text = re.sub(r'\s+', ' ', text)
+
+    # thêm nhịp nhẹ kiểu người
+    words = text.split()
+    result = []
+
+    for i, w in enumerate(words):
+        result.append(w)
+
+        # random nghỉ nhẹ
+        if random.random() < 0.03:
+            result.append(",")
+
+    return " ".join(result)
