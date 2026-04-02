@@ -159,16 +159,26 @@ if st.button("🚀 Generate Voice"):
     if not text:
         st.warning("Nhập nội dung trước!")
     else:
-        # 🔥 FLOW CHUẨN
-        processed_text = process_text(text)
-        processed_text = fix_upper_after_dot(processed_text)
-        processed_text = fix_numbers_level_max(processed_text)
-        processed_text = soften_dots(processed_text)
-        processed_text = re.sub(r'\s+', ' ', processed_text)
-        processed_text = re.sub(r'\s+', ' ', processed_text)
+        # 🔥 FLOW FINAL FIX 100%
 
-        final_text = story_engine(processed_text)
+# 1. protect decimal trước khi bị phá
+processed_text, decimals = protect_decimal(text)
 
+# 2. xử lý bình thường
+processed_text = process_text(processed_text)
+
+processed_text = fix_upper_after_dot(processed_text)
+
+processed_text = fix_numbers_level_max(processed_text)
+
+processed_text = soften_dots(processed_text)
+
+processed_text = re.sub(r'\s+', ' ', processed_text)
+
+# 3. restore decimal (QUAN TRỌNG)
+processed_text = restore_decimal(processed_text, decimals)
+
+final_text = story_engine(processed_text)
         with st.spinner("🎧 Đang tạo voice..."):
             file_name = cached_generate(
                 final_text,
