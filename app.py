@@ -5,7 +5,7 @@ import re
 import random
 import os
 import hashlib
-
+from tts_utils.text_processor import process_text, fix_upper_after_dot, fix_numbers_level_max
 # ================= CONFIG =================
 st.set_page_config(page_title="Voice AI SaaS Pro", page_icon="🎙️")
 
@@ -162,7 +162,9 @@ if st.button("🚀 Generate Voice"):
         # 🔥 FLOW CHUẨN
         processed_text = process_text(text)
         processed_text = fix_upper_after_dot(processed_text)
+        processed_text = fix_numbers_level_max(processed_text)
         processed_text = soften_dots(processed_text)
+        processed_text = re.sub(r'\s+', ' ', processed_text)
         processed_text = re.sub(r'\s+', ' ', processed_text)
 
         final_text = story_engine(processed_text)
