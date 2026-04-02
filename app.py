@@ -86,7 +86,7 @@ def cached_generate(text, voice, rate):
 # ================= UI =================
 text = st.text_area(
     "Nhập nội dung:",
-    height=250,
+    height=400,
     key="text_input"
 )
 
