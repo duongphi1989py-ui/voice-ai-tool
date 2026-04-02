@@ -5,7 +5,12 @@ import re
 import random
 import os
 import hashlib
-from tts_utils.text_processor import process_text, fix_upper_after_dot
+from tts_utils.text_processor import (
+    process_text,
+    fix_upper_after_dot,
+    soften_dots,
+    fix_numbers_ultimate
+)
 # ================= CONFIG =================
 st.set_page_config(page_title="Voice AI SaaS Pro", page_icon="🎙️")
 
