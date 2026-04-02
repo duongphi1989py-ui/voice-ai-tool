@@ -43,7 +43,7 @@ with col_left:
 
     # nút xoá
     def clear_text():
-        st.session_state["text_input"] = ""
+        
 
     st.button("🗑️ Xóa nội dung", on_click=clear_text)
 
