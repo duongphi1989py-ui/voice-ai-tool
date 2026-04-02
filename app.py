@@ -11,7 +11,8 @@ from tts_utils.text_processor import (
     fix_upper_after_dot,
     soften_dots,
     fix_numbers_ultimate,
-    story_engine
+    story_engine,
+    smooth_text
 )
 
 # ================= CONFIG =================
