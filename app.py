@@ -134,8 +134,7 @@ text = st.text_area("Nhập nội dung:", height=250, key="text_input")
 
 st.button("🗑️ Xoá nhanh", on_click=clear_text)
 
-with col2:
-    st.write("")  # để cân layout
+
 
 voices = {
     "Nữ Việt Nam": "vi-VN-HoaiMyNeural",
