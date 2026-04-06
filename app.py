@@ -6,13 +6,7 @@ import os
 import hashlib
 
 # ===== IMPORT TEXT PROCESS =====
-from tts_utils.text_processor import (
-    process_text,
-    fix_upper_after_dot,
-    fix_numbers_ultimate,
-    story_engine,
-    smooth_text
-)
+from tts_utils.text_processor import final_process
 
 # ================= CONFIG =================
 st.set_page_config(page_title="Voice AI PRO", page_icon="🎙️")
@@ -79,19 +73,7 @@ if st.button("🚀 Generate Voice"):
         st.warning("Nhập nội dung trước!")
     else:
         # ===== FLOW CHUẨN =====
-        processed = process_text(text)
-
-        processed = fix_numbers_ultimate(processed)
-
-        processed = fix_upper_after_dot(processed)
-
-        processed = story_engine(processed)
-
-        processed = smooth_text(processed)   # 🔥 thêm nhịp người
-
-        # clean cuối
-        final_text = re.sub(r'\s+', ' ', processed).strip()
-
+        final_text = final_process(text)
         # debug nếu cần
         # st.write(final_text)
 
