@@ -1,14 +1,15 @@
 import re
 import random
 
-# ================= CLEAN BASIC =================
-def process_text(text: str) -> str:
-    text = re.sub(r'\s+', ' ', text)
-    text = text.replace("\n", " <pause> ")
-    text = text.replace('"', '')
-    return text.strip()
+# ================= FIX VIẾT HOA SAU DẤU . =================
+def fix_upper_after_dot(text: str) -> str:
+    return re.sub(
+        r'\.\s+([A-ZÀ-Ỹ])',
+        lambda m: '. ' + m.group(1).lower(),
+        text
+    )
 
-# ================= FIX NUMBER =================
+# ================= MAP SỐ =================
 number_map = {
     "0": "không", "1": "một", "2": "hai", "3": "ba", "4": "bốn",
     "5": "năm", "6": "sáu", "7": "bảy", "8": "tám", "9": "chín"
@@ -17,86 +18,89 @@ number_map = {
 def read_number(num_str):
     return " ".join(number_map.get(d, d) for d in num_str)
 
+# ================= FIX SỐ ULTIMATE =================
 def fix_numbers_ultimate(text: str) -> str:
+
+    # ===== 1. SỐ THẬP PHÂN (12.45 → 12 phẩy bốn năm) =====
     def decimal_replace(match):
-        return f"{match.group(1)} phẩy {read_number(match.group(2))}"
+        integer = match.group(1)
+        decimal = match.group(2)
+        return f"{int(integer)} phẩy {read_number(decimal)}"
 
     text = re.sub(r'(\d+)\.(\d+)', decimal_replace, text)
-    text = re.sub(r'(\d+)%', r'\1 phần trăm', text)
 
+    # ===== 2. PHẦN TRĂM (50% → 50 phần trăm) =====
+    text = re.sub(r'(\d+)\s*%', r'\1 phần trăm', text)
+
+    # ===== 3. GIỜ (09:05 → 9 giờ 5 phút) =====
     def time_replace(match):
-        return f"{int(match.group(1))} giờ {int(match.group(2))} phút"
+        h = int(match.group(1))
+        m = int(match.group(2))
+        return f"{h} giờ {m} phút"
 
     text = re.sub(r'(\d{1,2}):(\d{2})', time_replace, text)
 
     return text
 
-# ================= FIX CASE =================
-def fix_upper_after_dot(text: str) -> str:
-    return re.sub(
-        r'\.\s+([A-ZÀ-Ỹ])',
-        lambda m: '. ' + m.group(1).lower(),
-        text
-    )
-
-# ================= STORY RHYTHM =================
-def story_engine(text: str) -> str:
-    sentences = re.split(r'(?<=[.!?])\s+', text)
-
+# ================= SOFTEN DẤU . =================
+def soften_dots(text):
+    sentences = text.split(". ")
     result = []
 
-    for s in sentences:
-        s = s.strip()
-
-        # hội thoại → mềm hơn
-        if any(x in s for x in ["nói", "hỏi", "đáp"]):
-            s += ", "
-
-        # câu bình thường
-        elif len(s) < 40:
-            s += ", "
-
-        # câu dài → nghỉ mạnh
+    for i, s in enumerate(sentences):
+        if i < len(sentences) - 1:
+            # 70% thành dấu phẩy (đỡ khựng)
+            if random.random() < 0.7:
+                result.append(s + ", ")
+            else:
+                result.append(s + ". ")
         else:
-            s += ". "
+            result.append(s)
 
-        result.append(s)
+    return "".join(result)
 
-    return " ".join(result)
+# ================= PROCESS TEXT =================
+def process_text(text: str) -> str:
+    # bỏ khoảng trắng dư
+    text = re.sub(r'\s+', ' ', text)
 
-# ================= HUMANIZE =================
-def humanize_text(text: str) -> str:
+    # xuống dòng
+    text = text.replace("\n", ". ")
+
+    # fix dấu cơ bản
+    text = text.replace(",", ", ")
+    text = text.replace(":", ": ")
+    text = text.replace("!", ", ")
+    text = text.replace("?", ", ")
+
+    # bỏ dấu " gây khựng → đổi thành ,
+    text = text.replace('"', '')
+
+    return text
+
+# ================= STORY ENGINE =================
+def story_engine(text):
+    text = text.strip()
+
+    # nhịp nhẹ tự nhiên
+    text = re.sub(r",", ", ", text)
+    text = re.sub(r"!", "! ", text)
+
+    return text
+def smooth_text(text):
+    # giảm cụm gây khựng
+    text = re.sub(r'\s*,\s*', ', ', text)
+    text = re.sub(r'\s+', ' ', text)
+
+    # thêm nhịp nhẹ kiểu người
     words = text.split()
     result = []
 
     for i, w in enumerate(words):
         result.append(w)
 
-        # pause nhẹ random
-        if random.random() < 0.025:
+        # random nghỉ nhẹ
+        if random.random() < 0.03:
             result.append(",")
 
-        # pause theo keyword
-        if w.lower() in ["nhưng", "và", "sau đó", "bỗng nhiên"]:
-            result.append(",")
-
-        # pause mạnh
-        if w == "<pause>":
-            result.append(".")
-    
     return " ".join(result)
-
-# ================= FINAL =================
-def final_process(text: str) -> str:
-    text = process_text(text)
-    text = fix_numbers_ultimate(text)
-    text = fix_upper_after_dot(text)
-    text = story_engine(text)
-    text = humanize_text(text)
-
-    # clean cuối
-    text = re.sub(r'\s+', ' ', text)
-    text = text.replace(" ,", ",")
-    text = text.replace(" .", ".")
-    text = text.replace('"', " ")
-    return text.strip()
