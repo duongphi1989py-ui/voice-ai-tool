@@ -98,5 +98,5 @@ def final_process(text: str) -> str:
     text = re.sub(r'\s+', ' ', text)
     text = text.replace(" ,", ",")
     text = text.replace(" .", ".")
-
+    text = text.replace('"', " ")
     return text.strip()
