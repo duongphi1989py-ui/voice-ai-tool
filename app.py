@@ -2,18 +2,24 @@ import streamlit as st
 import asyncio
 import edge_tts
 import re
+import random
 import os
 import hashlib
 
-# ===== IMPORT TEXT PROCESS =====
-from tts_utils.text_processor import final_process
+from tts_utils.text_processor import (
+    process_text,
+    fix_upper_after_dot,
+    fix_numbers_ultimate,
+    story_engine
+)
 
 # ================= CONFIG =================
-st.set_page_config(page_title="Voice AI PRO", page_icon="🎙️")
-st.title("🎙️ Voice AI PRO MAX (Smooth Vietnamese Voice)")
-st.write("Giọng đọc tự nhiên – không vấp – có nhịp như người")
+st.set_page_config(page_title="Voice AI SaaS Pro", page_icon="🎙️")
 
-# ================= SESSION =================
+st.title("🎙️ Voice AI SaaS PRO (Smooth Real Voice)")
+st.write("Không dùng SSML → đọc mượt như người")
+
+# ================= SESSION STATE =================
 if "text_input" not in st.session_state:
     st.session_state.text_input = ""
 
@@ -22,14 +28,46 @@ def get_hash(text, voice, rate):
     raw = text + voice + rate
     return hashlib.md5(raw.encode()).hexdigest()
 
+# ================= SPLIT =================
+def split_text(text, max_length=500):
+    sentences = re.split(r'(?<=[.!?])\s+', text)
+
+    chunks = []
+    current = ""
+
+    for sentence in sentences:
+        if len(current) + len(sentence) < max_length:
+            current += sentence + " "
+        else:
+            chunks.append(current.strip())
+            current = sentence + " "
+
+    if current:
+        chunks.append(current.strip())
+
+    return chunks
+
 # ================= GENERATE =================
 async def generate_voice(text, voice, rate, file_name):
-    communicate = edge_tts.Communicate(
-        text=text,
-        voice=voice,
-        rate=rate
-    )
-    await communicate.save(file_name)
+    chunks = split_text(text)
+
+    open(file_name, "wb").close()
+
+    for i, chunk in enumerate(chunks):
+        temp_file = f"temp_{i}.mp3"
+
+        communicate = edge_tts.Communicate(
+            text=chunk,
+            voice=voice,
+            rate=rate
+        )
+        await communicate.save(temp_file)
+
+        with open(file_name, "ab") as final:
+            with open(temp_file, "rb") as f:
+                final.write(f.read())
+
+        await asyncio.sleep(0.12)  # 🔥 mượt hơn
 
 # ================= CACHE =================
 @st.cache_data
@@ -46,7 +84,11 @@ def cached_generate(text, voice, rate):
     return file_name
 
 # ================= UI =================
-text = st.text_area("Nhập nội dung:", height=300, key="text_input")
+text = st.text_area(
+    "Nhập nội dung:",
+    height=400,
+    key="text_input"
+)
 
 def clear_text():
     st.session_state["text_input"] = ""
@@ -54,34 +96,53 @@ def clear_text():
 st.button("🗑️ Xóa nhanh", on_click=clear_text)
 
 voices = {
-    "Nữ Việt Nam (mượt nhất)": "vi-VN-HoaiMyNeural",
-    "Nam Việt Nam": "vi-VN-NamMinhNeural"
+    "Nữ Việt Nam": "vi-VN-HoaiMyNeural",
+    "Nam Việt Nam": "vi-VN-NamMinhNeural",
+    "Nữ US": "en-US-JennyNeural",
+    "Nam US": "en-US-GuyNeural"
 }
 voice_name = st.selectbox("Chọn giọng:", list(voices.keys()))
 
-rate_map = {
-    "Chậm": "-10%",
-    "Bình thường": "+0%",
-    "Nhanh": "+10%"
+emotion_map = {
+    "Tự nhiên": "+0%",
+    "Vui vẻ": "+15%",
+    "Buồn": "-15%",
+    "Kể chuyện": "-5%",
+    "Quảng cáo": "+20%"
 }
-rate_name = st.selectbox("Tốc độ:", list(rate_map.keys()))
+emotion_name = st.selectbox("🎭 Emotion", list(emotion_map.keys()))
 
-# ================= MAIN =================
+# ================= RUN =================
 if st.button("🚀 Generate Voice"):
 
     if not text:
         st.warning("Nhập nội dung trước!")
     else:
-        # ===== FLOW CHUẨN =====
-        final_text = final_process(text)
-        # debug nếu cần
+        # 🔥 FLOW FINAL
+        processed_text = process_text(text)
+
+        processed_text = fix_numbers_ultimate(processed_text)
+
+        processed_text = fix_upper_after_dot(processed_text)
+
+       
+        # 🔥 giảm pause dấu chấm
+       
+
+        # clean space
+        processed_text = re.sub(r'\s+', ' ', processed_text)
+        processed_text = processed_text.replace("  ", " ")
+
+        final_text = story_engine(processed_text)
+
+        # DEBUG nếu cần
         # st.write(final_text)
 
         with st.spinner("🎧 Đang tạo voice..."):
             file_name = cached_generate(
                 final_text,
                 voices[voice_name],
-                rate_map[rate_name]
+                emotion_map[emotion_name]
             )
 
         st.success("✅ Done!")
@@ -93,7 +154,6 @@ if st.button("🚀 Generate Voice"):
                 f,
                 file_name="voice.mp3"
             )
-
 # ================= CLEAR CACHE =================
 if st.button("🧹 Clear cache"):
     st.cache_data.clear()
